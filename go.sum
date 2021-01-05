@@ -1,0 +1,8 @@
+github.com/Ferza17/bookstore_oauth_library-go v1.1.1 h1:ASFvrNk5RtaHwhxiEMXrWAtNw2ggd8HtJ3t8lwV+d4c=
+github.com/Ferza17/bookstore_oauth_library-go v1.1.1/go.mod h1:257sch1cUQx9QeJSyRqX+NDkgvfzbRBzBCWosSQpGrI=
+github.com/ferza17/bookstore_oauth_library-go v1.1.1 h1:DiN1rRQGYSq1EraHfY+ZzzuwZbSS+kxCW5DzwYKzNG4=
+github.com/ferza17/bookstore_oauth_library-go v1.1.1/go.mod h1:dt9nvgri7d8iNnZc4N7k+3urqpmkYezsW73NhkaTGhQ=
+github.com/gorilla/mux v1.8.0 h1:i40aqfkR1h2SlN9hojwV5ZA91wcXFOvkdNIeFDP5koI=
+github.com/gorilla/mux v1.8.0/go.mod h1:DVbg23sWSpFRCP0SfiEN6jmj59UnW/n46BH5rLB71So=
+github.com/mercadolibre/golang-restclient v0.0.0-20170701022150-51958130a0a0 h1:EDOjA2IGgjSBlPlnW7CzBUo/o410SMiFh670jP29Kc4=
+github.com/mercadolibre/golang-restclient v0.0.0-20170701022150-51958130a0a0/go.mod h1:Z7qYja4aGk/RWl1yJtN1LXRvC7Hsbq8SEbqWWDrMqMs=
