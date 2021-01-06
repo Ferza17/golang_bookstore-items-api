@@ -8,4 +8,7 @@ import (
 func Urls() {
 	// Create Item URL
 	r.HandleFunc("/items", controllers.ItemsController.Create).Methods(http.MethodPost)
+
+	//Get By Id
+	r.HandleFunc("/items/{id}", controllers.ItemsController.Get).Methods(http.MethodGet)
 }
