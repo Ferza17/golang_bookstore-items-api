@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Ferza17/golang_bookstore-items-api/clients/elasticsearch"
+	"github.com/Ferza17/golang_bookstore-items-api/domains/queries"
 	"github.com/Ferza17/golang_bookstore-items-api/logger"
 	restErr "github.com/Ferza17/golang_bookstore-items-api/utils/errors_utils"
 	"strconv"
@@ -46,13 +47,18 @@ func (i *Item) Get() *restErr.RestError {
 		//logger.Info("Error when decoding json")
 		return restErr.NewInternalServerError("Error when decoding json")
 	}
-	logger.Info(fmt.Sprintln(responseBody["hits"]))
+
+	if len(responseBody["hits"].(map[string]interface{})["hits"].([]interface{})) == 0 {
+		return restErr.NewNotFoundError("No math data with given id")
+	}
+
 	for _, hit := range responseBody["hits"].(map[string]interface{})["hits"].([]interface{}) {
 		doc := hit.(map[string]interface{})
 		source := doc["_source"]
-		seller, _ := strconv.ParseInt(fmt.Sprint(source.(map[string]interface{})["seller"]), 10, 64)
 
+		seller, _ := strconv.ParseInt(fmt.Sprint(source.(map[string]interface{})["seller"]), 10, 64)
 		i.Seller = seller
+
 		i.Title = fmt.Sprint(source.(map[string]interface{})["title"])
 
 		//TODO: assign value to i.Description
@@ -71,4 +77,54 @@ func (i *Item) Get() *restErr.RestError {
 		i.Status = fmt.Sprint(source.(map[string]interface{})["status"])
 	}
 	return nil
+}
+
+func (i *Item) Search(query queries.EsQuery) ([]Item, *restErr.RestError) {
+	finalQuery := query.Build()
+	response, err := elasticsearch.Client.Search(IndexItem, finalQuery)
+	if err != nil {
+		return nil, restErr.NewInternalServerError("error when trying to get data")
+	}
+	defer response.Body.Close()
+	// Get Body
+	var responseBody map[string]interface{}
+	if err := json.NewDecoder(response.Body).Decode(&responseBody); err != nil {
+		//logger.Info("Error when decoding json")
+		return nil, restErr.NewInternalServerError("Error when decoding json")
+	}
+
+	if len(responseBody["hits"].(map[string]interface{})["hits"].([]interface{})) == 0 {
+		return nil, restErr.NewNotFoundError("No math data with given request")
+	}
+
+	items := make([]Item, len(responseBody["hits"].(map[string]interface{})["hits"].([]interface{})))
+
+	for index, hit := range responseBody["hits"].(map[string]interface{})["hits"].([]interface{}) {
+		doc := hit.(map[string]interface{})
+		source := doc["_source"]
+		var item Item
+		seller, _ := strconv.ParseInt(fmt.Sprint(source.(map[string]interface{})["seller"]), 10, 64)
+		item.Seller = seller
+
+		item.Title = fmt.Sprint(source.(map[string]interface{})["title"])
+
+		//TODO: assign value to i.Description
+
+		item.Video = fmt.Sprint(source.(map[string]interface{})["video"])
+
+		price, _ := strconv.ParseFloat(fmt.Sprint(source.(map[string]interface{})["price"]), 32)
+		item.Price = float32(price)
+
+		AvailableQuantity, _ := strconv.ParseInt(fmt.Sprint(source.(map[string]interface{})["available_quantity"]), 10, 64)
+		item.AvailableQuantity = AvailableQuantity
+
+		SoldQuantity, _ := strconv.ParseInt(fmt.Sprint(source.(map[string]interface{})["sold_quantity"]), 10, 64)
+		item.SoldQuantity = SoldQuantity
+
+		item.Status = fmt.Sprint(source.(map[string]interface{})["status"])
+
+		items[index] = item
+	}
+
+	return items, nil
 }

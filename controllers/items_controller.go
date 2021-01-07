@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/Ferza17/bookstore_oauth_library-go/oauth"
 	ItemDomain "github.com/Ferza17/golang_bookstore-items-api/domains/item"
+	"github.com/Ferza17/golang_bookstore-items-api/domains/queries"
 	"github.com/Ferza17/golang_bookstore-items-api/services"
 	restErr "github.com/Ferza17/golang_bookstore-items-api/utils/errors_utils"
 	"github.com/Ferza17/golang_bookstore-items-api/utils/http_utils"
@@ -20,6 +21,7 @@ var (
 type itemsControllerInterface interface {
 	Create(w http.ResponseWriter, r *http.Request)
 	Get(w http.ResponseWriter, r *http.Request)
+	Search(w http.ResponseWriter, r *http.Request)
 }
 type itemsControllerStruct struct{}
 
@@ -30,7 +32,7 @@ func (c *itemsControllerStruct) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if oauth.GetCallerId(r) == 0{
+	if oauth.GetCallerId(r) == 0 {
 		respErr := restErr.NewUnauthorizedError()
 		http_utils.RespondError(w, *respErr)
 		return
@@ -66,7 +68,6 @@ func (c *itemsControllerStruct) Get(w http.ResponseWriter, r *http.Request) {
 	itemId := strings.TrimSpace(vars["id"])
 	item, err := services.ItemService.Get(itemId)
 
-
 	if err != nil {
 		respErr := restErr.NewBadRequestError("cant found data with that id")
 		http_utils.RespondError(w, *respErr)
@@ -75,4 +76,30 @@ func (c *itemsControllerStruct) Get(w http.ResponseWriter, r *http.Request) {
 
 	http_utils.RespondJSON(w, http.StatusOK, item)
 
+}
+
+func (c *itemsControllerStruct) Search(w http.ResponseWriter, r *http.Request) {
+	bytes, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		apiError := restErr.NewBadRequestError("Invalid JSON Body")
+		http_utils.RespondError(w, *apiError)
+		return
+	}
+	defer r.Body.Close()
+
+
+	var query queries.EsQuery
+
+	if err := json.Unmarshal(bytes, &query); err != nil {
+		apiError := restErr.NewBadRequestError("Error When unmarshalling body")
+		http_utils.RespondError(w, *apiError)
+		return
+	}
+
+	items, searchError := services.ItemService.Search(query)
+	if searchError != nil {
+		http_utils.RespondError(w, *searchError)
+		return
+	}
+	http_utils.RespondJSON(w, http.StatusOK, items)
 }

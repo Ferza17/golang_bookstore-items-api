@@ -2,6 +2,7 @@ package services
 
 import (
 	"github.com/Ferza17/golang_bookstore-items-api/domains/item"
+	"github.com/Ferza17/golang_bookstore-items-api/domains/queries"
 	"github.com/Ferza17/golang_bookstore-items-api/logger"
 	"github.com/Ferza17/golang_bookstore-items-api/utils/errors_utils"
 )
@@ -13,6 +14,7 @@ var (
 type itemsServiceInterface interface {
 	Create(item.Item) (*item.Item, *errors_utils.RestError)
 	Get(string) (*item.Item, *errors_utils.RestError)
+	Search(query queries.EsQuery) ([]item.Item, *errors_utils.RestError)
 }
 
 type itemsServiceStruct struct {
@@ -32,4 +34,9 @@ func (s *itemsServiceStruct) Get(id string) (*item.Item, *errors_utils.RestError
 		return nil, err
 	}
 	return &request, nil
+}
+
+func (s *itemsServiceStruct) Search(query queries.EsQuery) ([]item.Item, *errors_utils.RestError) {
+	dao := item.Item{}
+	return dao.Search(query)
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/elastic/go-elasticsearch/v7"
 	"github.com/elastic/go-elasticsearch/v7/esapi"
 	"github.com/elastic/go-elasticsearch/v7/esutil"
+	"io"
 	"net/http"
 	"time"
 )
@@ -22,6 +23,7 @@ type esClientInterface interface {
 	setClient(*elasticsearch.Client)
 	Index(string, interface{}) (*esapi.Response, error)
 	Get(string, string) (*esapi.Response, error)
+	Search(string, io.Reader) (*esapi.Response, error)
 }
 
 func Init() {
@@ -39,7 +41,6 @@ func Init() {
 	}
 	logger.Info("Connection Successfully")
 	Client.setClient(client)
-
 }
 
 func (c *esClientStruct) setClient(client *elasticsearch.Client) {
@@ -63,14 +64,14 @@ func (c *esClientStruct) Get(index string, id string) (*esapi.Response, error) {
 			},
 		},
 	}
+
 	res, err := c.client.Search(
 		c.client.Search.WithContext(context.Background()),
 		c.client.Search.WithIndex(index),
+		c.client.Search.WithPretty(),
 		c.client.Search.WithBody(esutil.NewJSONReader(query)),
-		)
-	if err != nil {
+	)
 
-	}
 	if err != nil {
 		return nil, err
 	}
@@ -78,5 +79,23 @@ func (c *esClientStruct) Get(index string, id string) (*esapi.Response, error) {
 	if res.IsError() {
 		return nil, err
 	}
+	return res, nil
+}
+
+func (c *esClientStruct) Search(index string, body io.Reader) (*esapi.Response, error) {
+	//TODO: fix error here
+	res, err := c.client.Search(
+		c.client.Search.WithContext(context.Background()),
+		c.client.Search.WithIndex(index),
+		c.client.Search.WithPretty(),
+		c.client.Search.WithBody(body),
+	)
+	if err != nil {
+		return nil, err
+	}
+	if res.IsError() {
+		return nil, err
+	}
+
 	return res, nil
 }
